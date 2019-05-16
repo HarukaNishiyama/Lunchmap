@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 
 class ShopController extends Controller
 {
+    public function __construct(){
+        // exeptしたものは制限がかからない　ログインしてなくても閲覧できる
+        $this->middleware('auth')->except(['index','show']);
+    }
     /**
      * Display a listing of the resource.
      *
@@ -41,9 +45,13 @@ class ShopController extends Controller
     public function store(Request $request)
     {
         $shop=new Shop;
+        // ログインしているユーザーの情報をshop変数に入れる
+        $user=\Auth::user();
+
         $shop->name=request('name');
         $shop->address=request('address');
         $shop->category_id=request('category_id');
+        $shop->user_id=$user->id;
         $shop->save();
         return redirect()->route('shop.detail',['id'=>$shop->id]);
     }
@@ -57,7 +65,13 @@ class ShopController extends Controller
     public function show($id)
     {
         $shop=Shop::find($id);
-        return view('show',['shop'=>$shop]);
+        $user=\Auth::user();
+        if($user){
+            $login_user_id=$user->id;
+        }else{
+            $login_user_id='';
+        }
+        return view('show',['shop'=>$shop , 'login_user_id'=>$login_user_id]);
     }
 
     /**
